@@ -55,19 +55,7 @@ phases:
       - docker tag $WEB_IMAGE_NAME:latest $ECR_URI/$WEB_IMAGE_NAME:latest
       - docker push $ECR_URI/$WEB_IMAGE_NAME:latest
 
-  post_build:
-    commands:
-      ### 6. Deploy WEB to EKS
-      - echo Deploying Web tier to EKS...
-      - kubectl apply -f web/deployment.yaml
-
-      ### 7. Wait for final LoadBalancer
-      - echo Waiting for Web LoadBalancer to become available...
-      - |
-        for i in {1..60}; do
-          WEB_ELB=$(kubectl get svc web-tier-lb -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          if [[ "$WEB_ELB" != "" ]]; then break; fi
-          echo "Waiting for external hostname... ($i/60)"
-          sleep 5
-        done
-      - echo "Final Web ELB: $WEB_ELB"
+  artifacts:
+  base-directory: web
+  files:
+    - web-deployment.yaml
