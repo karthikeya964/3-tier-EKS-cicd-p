@@ -11,8 +11,7 @@ env:
 phases:
   install:
     runtime-versions:
-      python: 3.11
-      docker: 18
+      python: 3.11  # Only use supported runtimes here
     commands:
       - echo "Installing kubectl..."
       - export KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
@@ -64,5 +63,6 @@ phases:
       - kubectl apply -f web/web-deployment.yaml
 
 artifacts:
+  base-directory: web
   files:
     - web/web-deployment.yaml
