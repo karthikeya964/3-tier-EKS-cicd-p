@@ -67,9 +67,8 @@ phases:
 
       # Deploy web-tier to EKS
       - echo "Deploying Web Tier to EKS..."
-      - kubectl apply -f web/web-deployment.yaml
 
 artifacts:
   base-directory: web
   files:
-    - web/web-deployment.yaml
+    - web-deployment.yaml
