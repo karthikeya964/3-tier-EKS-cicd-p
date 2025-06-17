@@ -40,7 +40,7 @@ phases:
       - kubectl apply -f app/app-deployment.yaml
 
       - echo "Waiting for App LoadBalancer to become available..."
-      - |
+      - >
         for i in {1..60}; do
           APP_ELB=$(kubectl get svc user-app-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
           if [[ "$APP_ELB" != "" ]]; then
@@ -50,7 +50,7 @@ phases:
           echo "Waiting... ($i/60)"
           sleep 5
         done
-      - if [[ "$APP_ELB" == "" ]]; then echo "App ELB not available after timeout!" && exit 1; fi
+        if [[ "$APP_ELB" == "" ]]; then echo "App ELB not available after timeout!" && exit 1; fi
 
       - echo "Injecting App ELB into web/nginx.conf..."
       - sed -i "s|__APP_ELB__|$APP_ELB|g" web/nginx.conf
