@@ -24,20 +24,8 @@ Parameters:
   MyDBRootUserPassword:
     Type: String
     Description: "Root password for the MySQL Database"
-    Default: "admin1234"
+    Default: "adminadmin"
     NoEcho: true
-  MyWebInstanceLaunchTemplate:
-    Type: String
-    Description: "Enter Launch Template ID for the Web Tier Instances which you created earlier(through console)"
-  MyAppInstanceLaunchTemplate:
-    Type: String
-    Description: "Enter Launch Template ID for the App Tier Instances which you created earlier(through console)"
-  MyWebInstanceLaunchTemplateVersion:
-    Type: String
-    Description: "Launch Template Version for Web Tier"
-  MyAppInstanceLaunchTemplateVersion:
-    Type: String
-    Description: "Launch Template Version for App Tier"
 
 Conditions:
   is_cidr_10: !Equals [!Ref MyVpcCidr, "10.0.0.0/16"]
@@ -68,7 +56,7 @@ Resources:
       InternetGatewayId: !Ref MyIGW
 
   # Public Subnets
-  MyWebPubSub1:
+  MyPubSub:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVpc
@@ -77,21 +65,10 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: Web-Public-Subnet1
-
-  MyWebPubSub2:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref MyVpc
-      AvailabilityZone: !Select [1, !GetAZs '']
-      CidrBlock: !If [is_cidr_10, "10.0.32.0/19", "20.0.8.0/21"]
-      MapPublicIpOnLaunch: true
-      Tags:
-        - Key: Name
-          Value: Web-Public-Subnet2
+          Value: Public-Subnet
 
   # Private App Subnets
-  MyAppPriSub1:
+  MyWebPriSub:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVpc
@@ -100,9 +77,9 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: App-Private-Subnet1
+          Value: Web-Private-Subnet
 
-  MyAppPriSub2:
+  MyAppPriSub:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVpc
@@ -111,10 +88,10 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: App-Private-Subnet2
+          Value: App-Private-Subnet
 
   # Private DB Subnets
-  MyDBPriSub1:
+  MyDBPriSub:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVpc
@@ -123,18 +100,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: DB-Private-Subnet1
-
-  MyDBPriSub2:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref MyVpc
-      AvailabilityZone: !Select [1, !GetAZs '']
-      CidrBlock: !If [is_cidr_10, "10.0.192.0/18", "20.0.48.0/20"]
-      MapPublicIpOnLaunch: false
-      Tags:
-        - Key: Name
-          Value: DB-Private-Subnet2
+          Value: DB-Private-Subnet
 
   # Elastic IP for NAT Gateway
   MyEIPForNat:
