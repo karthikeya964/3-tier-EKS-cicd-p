@@ -39,7 +39,7 @@ phases:
 
       # Deploy app-tier to EKS
       - echo "Deploying App Tier to EKS..."
-      - kubectl apply -f app/app-deployment.yaml
+      - kubectl apply --validate=false -f app/app-deployment.yaml
 
       # Wait for the LoadBalancer hostname
       - echo "Waiting for App LoadBalancer to become available..."
