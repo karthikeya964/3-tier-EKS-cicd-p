@@ -1,1 +1,234 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: StackSet template to create a basic VPC with public and private subnets, NAT, and an RDS MySQL DB
 
+Parameters:
+  MyVpcCidr:
+    Type: String
+    Description: "CIDR block for the VPC"
+    Default: "10.0.0.0/16"
+    AllowedValues:
+      - "10.0.0.0/16"
+      - "20.0.0.0/18"
+  MyDBSubnetGroupName:
+    Type: String
+    Description: "Name for the DB Subnet Group"
+    Default: "MyDBSubnetGroup"
+  MyDBName:
+    Type: String
+    Description: "Name for the MySQL Database"
+    Default: "MySQLDatabase"
+  MyDBRootUserName:
+    Type: String
+    Description: "Root username for the MySQL Database"
+    Default: "admin"
+  MyDBRootUserPassword:
+    Type: String
+    Description: "Root password for the MySQL Database"
+    Default: "admin1234"
+    NoEcho: true
+  MyWebInstanceLaunchTemplate:
+    Type: String
+    Description: "Enter Launch Template ID for the Web Tier Instances which you created earlier(through console)"
+  MyAppInstanceLaunchTemplate:
+    Type: String
+    Description: "Enter Launch Template ID for the App Tier Instances which you created earlier(through console)"
+  MyWebInstanceLaunchTemplateVersion:
+    Type: String
+    Description: "Launch Template Version for Web Tier"
+  MyAppInstanceLaunchTemplateVersion:
+    Type: String
+    Description: "Launch Template Version for App Tier"
+
+Conditions:
+  is_cidr_10: !Equals [!Ref MyVpcCidr, "10.0.0.0/16"]
+
+Resources:
+  # VPC and DNS
+  MyVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref MyVpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: My-VPC
+
+  MyIGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: My-Internet-Gateway
+
+  MyIGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref MyVpc
+      InternetGatewayId: !Ref MyIGW
+
+  # Public Subnets
+  MyWebPubSub1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVpc
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: !If [is_cidr_10, "10.0.0.0/19", "20.0.0.0/21"]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: Web-Public-Subnet1
+
+  MyWebPubSub2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVpc
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: !If [is_cidr_10, "10.0.32.0/19", "20.0.8.0/21"]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: Web-Public-Subnet2
+
+  # Private App Subnets
+  MyAppPriSub1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVpc
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: !If [is_cidr_10, "10.0.64.0/19", "20.0.16.0/21"]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: App-Private-Subnet1
+
+  MyAppPriSub2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVpc
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: !If [is_cidr_10, "10.0.96.0/19", "20.0.24.0/21"]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: App-Private-Subnet2
+
+  # Private DB Subnets
+  MyDBPriSub1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVpc
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: !If [is_cidr_10, "10.0.128.0/18", "20.0.40.0/20"]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: DB-Private-Subnet1
+
+  MyDBPriSub2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVpc
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: !If [is_cidr_10, "10.0.192.0/18", "20.0.48.0/20"]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: DB-Private-Subnet2
+
+  # Elastic IP for NAT Gateway
+  MyEIPForNat:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: MyNAT-EIP
+
+  # NAT Gateway
+  MyNatGateway:
+    Type: AWS::EC2::NatGateway
+    DependsOn: MyWebPubSub1
+    Properties:
+      ConnectivityType: public
+      SubnetId: !Ref MyWebPubSub1 #.SubnetId
+      AllocationId: !GetAtt MyEIPForNat.AllocationId
+      Tags:
+        - Key: Name
+          Value: My-NAT-Gateway
+
+  # Route Tables
+  MyWebRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MyVpc
+      Tags:
+        - Key: Name
+          Value: Web-Public-RT
+
+  MyAppRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MyVpc
+      Tags:
+        - Key: Name
+          Value: App-Private-RT
+
+  MyDBRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MyVpc
+      Tags:
+        - Key: Name
+          Value: DB-Private-RT
+
+  # Route Table Associations
+  MyWebRTAssoc1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref MyWebPubSub1
+      RouteTableId: !Ref MyWebRouteTable
+  MyWebRTAssoc2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref MyWebPubSub2
+      RouteTableId: !Ref MyWebRouteTable
+
+  MyAppRTAssoc1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref MyAppPriSub1
+      RouteTableId: !Ref MyAppRouteTable
+  MyAppRTAssoc2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref MyAppPriSub2
+      RouteTableId: !Ref MyAppRouteTable
+
+  MyDBRTAssoc1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref MyDBPriSub1
+      RouteTableId: !Ref MyDBRouteTable
+  MyDBRTAssoc2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref MyDBPriSub2
+      RouteTableId: !Ref MyDBRouteTable
+
+  # Routes
+  MyWebDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: MyIGWAttachment
+    Properties:
+      RouteTableId: !Ref MyWebRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref MyIGW
+
+  MyAppDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: MyNatGateway
+    Properties:
+      RouteTableId: !Ref MyAppRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      NatGatewayId: !Ref MyNatGateway
