@@ -9,7 +9,7 @@ env:
     ECR_URI: 047719630685.dkr.ecr.us-east-1.amazonaws.com
 
 phases:
-    install:
+  install:
     runtime-versions:
       python: 3.11
     commands:
@@ -30,17 +30,14 @@ phases:
 
   build:
     commands:
-      # Build and push App Tier
       - echo "Building App Tier Docker image..."
       - docker build -t $APP_IMAGE_NAME ./app
       - docker tag $APP_IMAGE_NAME:latest $ECR_URI/$APP_IMAGE_NAME:latest
       - docker push $ECR_URI/$APP_IMAGE_NAME:latest
 
-      # Deploy App Tier to EKS
       - echo "Deploying App Tier to EKS..."
       - kubectl apply -f app/app-deployment.yaml
 
-      # Wait for LoadBalancer of App Tier
       - echo "Waiting for App LoadBalancer to become available..."
       - |
         for i in {1..60}; do
@@ -54,17 +51,14 @@ phases:
         done
       - if [[ "$APP_ELB" == "" ]]; then echo "App ELB not available after timeout!" && exit 1; fi
 
-      # Replace placeholder in nginx.conf
       - echo "Injecting App ELB into web/nginx.conf..."
       - sed -i "s|__APP_ELB__|$APP_ELB|g" web/nginx.conf
 
-      # Build and push Web Tier
       - echo "Building Web Tier Docker image..."
       - docker build -t $WEB_IMAGE_NAME ./web
       - docker tag $WEB_IMAGE_NAME:latest $ECR_URI/$WEB_IMAGE_NAME:latest
       - docker push $ECR_URI/$WEB_IMAGE_NAME:latest
 
-      # Deploy Web Tier to EKS
       - echo "Deploying Web Tier to EKS..."
       - kubectl apply -f web/web-deployment.yaml
 
