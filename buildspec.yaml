@@ -23,6 +23,7 @@ phases:
 
       - echo "Updating kubeconfig for EKS cluster..."
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
+      - echo "Pavanteja@12pavan" | docker login -u "pavanthumati" --password-stdin
 
   pre_build:
     commands:
