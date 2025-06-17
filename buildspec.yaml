@@ -30,7 +30,7 @@ phases:
       - docker push $ECR_URI/$APP_IMAGE_NAME:latest
 
       - echo Deploying App to EKS...
-      - kubectl apply -f app/deployment.yaml
+      - kubectl apply -f app/app-deployment.yaml
 
       - echo Waiting for App LoadBalancer...
       - |
@@ -53,7 +53,6 @@ phases:
       - docker push $ECR_URI/$WEB_IMAGE_NAME:latest
 
       - echo Deploying Web to EKS...
-      - kubectl apply -f web-deployment.yaml
 
 artifacts:
   base-directory: web
