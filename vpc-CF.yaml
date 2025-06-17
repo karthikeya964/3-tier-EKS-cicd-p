@@ -137,7 +137,7 @@ Resources:
       VpcId: !Ref MyVpc
       Tags:
         - Key: Name
-          Value: Web-Public-RT
+          Value: Web-Private-RT
 
   MyAppRouteTable:
     Type: AWS::EC2::RouteTable
