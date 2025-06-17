@@ -1,5 +1,4 @@
 version: 0.2
-
 env:
   variables:
     AWS_REGION: us-east-1
@@ -7,15 +6,13 @@ env:
     APP_IMAGE_NAME: app-tier-image
     WEB_IMAGE_NAME: web-tier-image
     ECR_URI: 047719630685.dkr.ecr.us-east-1.amazonaws.com
-
 phases:
   install:
     runtime-versions:
       python: 3.11
     commands:
       - echo "Installing kubectl..."
-      - KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
-      - curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+      - curl -LO "$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
       - chmod +x kubectl
       - mv kubectl /usr/local/bin/
       - kubectl version --client
@@ -26,7 +23,7 @@ phases:
   pre_build:
     commands:
       - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_URI
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
   build:
     commands:
