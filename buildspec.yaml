@@ -23,7 +23,9 @@ phases:
 
       - echo "Updating kubeconfig for EKS cluster..."
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
-      - echo "Karthikeya@964" | docker login -u "karthik449" --password-stdin
+
+      - echo "Verifying AWS identity..."
+      - aws sts get-caller-identity
 
   pre_build:
     commands:
@@ -68,6 +70,7 @@ phases:
 
       # Deploy web-tier to EKS
       - echo "Deploying Web Tier to EKS..."
+      - kubectl apply -f web/web-deployment.yaml
 
 artifacts:
   base-directory: web
