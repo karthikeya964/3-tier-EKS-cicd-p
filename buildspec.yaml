@@ -3,11 +3,11 @@ version: 0.2
 env:
   variables:
     AWS_REGION: us-east-1
-    EKS_CLUSTER_NAME: eks-cluster-last
+    EKS_CLUSTER_NAME: adorable-gopher-1749897025
     APP_IMAGE_NAME: app-tier-image
     WEB_IMAGE_NAME: web-tier-image
-    ECR_URI: 047719630685.dkr.ecr.us-east-1.amazonaws.com
-    AWS_ACCOUNT_ID: 047719630685
+    ECR_URI: 235494798709.dkr.ecr.us-east-1.amazonaws.com
+    AWS_ACCOUNT_ID: 235494798709
 
 phases:
   install:
@@ -23,7 +23,7 @@ phases:
 
       - echo "Updating kubeconfig for EKS cluster..."
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
-      - echo "Pavanteja@12pavan" | docker login -u "pavanthumati" --password-stdin
+      - echo "Karthikeya@964" | docker login -u "karthik449" --password-stdin
 
   pre_build:
     commands:
