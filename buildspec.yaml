@@ -15,11 +15,11 @@ phases:
     commands:
       - echo "Installing kubectl..."
       - KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
-      - echo "Kubectl version: $KUBECTL_VERSION"
       - curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
       - chmod +x kubectl
       - mv kubectl /usr/local/bin/
       - kubectl version --client
+
       - echo "Updating kubeconfig for EKS cluster..."
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
 
@@ -30,16 +30,19 @@ phases:
 
   build:
     commands:
+      # Build and push app-tier
       - echo "Building App Tier Docker image..."
       - docker build -t $APP_IMAGE_NAME ./app
       - docker tag $APP_IMAGE_NAME:latest $ECR_URI/$APP_IMAGE_NAME:latest
       - docker push $ECR_URI/$APP_IMAGE_NAME:latest
 
+      # Deploy app-tier to EKS
       - echo "Deploying App Tier to EKS..."
       - kubectl apply -f app/app-deployment.yaml
 
+      # Wait for the LoadBalancer hostname
       - echo "Waiting for App LoadBalancer to become available..."
-      - >
+      - |
         for i in {1..60}; do
           APP_ELB=$(kubectl get svc user-app-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
           if [[ "$APP_ELB" != "" ]]; then
@@ -49,16 +52,19 @@ phases:
           echo "Waiting... ($i/60)"
           sleep 5
         done
-        if [[ "$APP_ELB" == "" ]]; then echo "App ELB not available after timeout!" && exit 1; fi
+      - if [[ "$APP_ELB" == "" ]]; then echo "App ELB not available after timeout!" && exit 1; fi
 
+      # Update nginx.conf with APP_ELB
       - echo "Injecting App ELB into web/nginx.conf..."
       - sed -i "s|__APP_ELB__|$APP_ELB|g" web/nginx.conf
 
+      # Build and push web-tier
       - echo "Building Web Tier Docker image..."
       - docker build -t $WEB_IMAGE_NAME ./web
       - docker tag $WEB_IMAGE_NAME:latest $ECR_URI/$WEB_IMAGE_NAME:latest
       - docker push $ECR_URI/$WEB_IMAGE_NAME:latest
 
+      # Deploy web-tier to EKS
       - echo "Deploying Web Tier to EKS..."
       - kubectl apply -f web/web-deployment.yaml
 
