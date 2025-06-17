@@ -124,6 +124,13 @@ Resources:
           Value: My-NAT-Gateway
 
   # Route Tables
+  MyPubRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MyVpc
+      Tags:
+        - Key: Name
+          Value: Public-RT
   MyWebRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
