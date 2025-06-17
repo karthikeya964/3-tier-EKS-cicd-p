@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: user-app-container
-        image: 047719630685.dkr.ecr.us-east-1.amazonaws.com/app-tier-image:latest
+        image: 235494798709.dkr.ecr.us-east-1.amazonaws.com/app-tier-image:latest
         ports:
         - containerPort: 5000
         env:
