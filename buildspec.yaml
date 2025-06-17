@@ -15,9 +15,8 @@ phases:
       python: 3.11
     commands:
       - echo "Installing kubectl..."
-      - export KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
-      - echo "Downloading kubectl version $KUBECTL_VERSION..."
-      - curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+      - KUBECTL_VERSION="v1.32.5"
+      - curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
       - chmod +x kubectl
       - mv kubectl /usr/local/bin/
       - kubectl version --client
@@ -74,9 +73,3 @@ artifacts:
   base-directory: web
   files:
     - web/web-deployment.yaml
-
-# Optional: Add cache to improve build performance
-# cache:
-#   paths:
-#     - '/root/.cache/pip/**/*'
-#     - '/root/.docker/**/*'
