@@ -10,17 +10,18 @@ env:
 
 phases:
   install:
-    runtime-versions:
-      python: 3.11  # Use a valid runtime for CodeBuild image
-    commands:
-      - echo "Installing kubectl..."
-      - curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-      - chmod +x kubectl
-      - mv kubectl /usr/local/bin/
-      - kubectl version --client
+  runtime-versions:
+    python: 3.11
+  commands:
+    - echo "Installing kubectl..."
+    - export KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
+    - curl -o kubectl "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+    - chmod +x kubectl
+    - mv kubectl /usr/local/bin/
+    - kubectl version --client
 
-      - echo "Updating kubeconfig for EKS cluster..."
-      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
+    - echo "Updating kubeconfig for EKS cluster..."
+    - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
 
   pre_build:
     commands:
