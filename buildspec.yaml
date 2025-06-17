@@ -6,7 +6,7 @@ env:
     EKS_CLUSTER_NAME: eks-cluster-last
     APP_IMAGE_NAME: app-tier-image
     WEB_IMAGE_NAME: web-tier-image
-    ECR_URI: 047719630685.dkr.ecr.us-east-1.amazonaws.com # Replace with your actual ECR URI like 1234567890.dkr.ecr.us-east-1.amazonaws.com
+    ECR_URI: 047719630685.dkr.ecr.us-east-1.amazonaws.com # Replace with actual ECR URI
 
 phases:
   install:
@@ -55,7 +55,11 @@ phases:
       - docker tag $WEB_IMAGE_NAME:latest $ECR_URI/$WEB_IMAGE_NAME:latest
       - docker push $ECR_URI/$WEB_IMAGE_NAME:latest
 
-  artifacts:
+      ### 6. Deploy WEB to EKS
+      - echo Deploying Web to EKS...
+      - kubectl apply -f web-deployment.yaml
+
+artifacts:
   base-directory: web
   files:
     - web-deployment.yaml
