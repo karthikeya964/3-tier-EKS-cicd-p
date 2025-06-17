@@ -16,11 +16,10 @@ phases:
       - echo "Installing kubectl..."
       - KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
       - echo "Kubectl version: $KUBECTL_VERSION"
-      - curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+      - curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
       - chmod +x kubectl
       - mv kubectl /usr/local/bin/
       - kubectl version --client
-
       - echo "Updating kubeconfig for EKS cluster..."
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
 
