@@ -8,8 +8,6 @@ env:
     WEB_IMAGE_NAME: web-tier-image
     ECR_URI: 235494798709.dkr.ecr.us-east-1.amazonaws.com
     AWS_ACCOUNT_ID: 235494798709
-  exported-variables:
-    - APP_ELB
 
 phases:
   install:
@@ -24,9 +22,8 @@ phases:
       - kubectl version --client
 
       - echo "Updating kubeconfig for EKS cluster..."
-      - mkdir -p ~/.kube
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
-      - export KUBECONFIG=~/.kube/config
+      - export KUBECONFIG=/root/.kube/config
 
       - echo "Verifying AWS identity..."
       - aws sts get-caller-identity
@@ -43,6 +40,10 @@ phases:
       - docker build -t $APP_IMAGE_NAME ./app
       - docker tag $APP_IMAGE_NAME:latest $ECR_URI/$APP_IMAGE_NAME:latest
       - docker push $ECR_URI/$APP_IMAGE_NAME:latest
+
+      # Test kubectl access
+      - echo "Checking kubectl access..."
+      - kubectl get nodes
 
       # Deploy app-tier to EKS
       - echo "Deploying App Tier to EKS..."
